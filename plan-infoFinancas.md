@@ -1,232 +1,118 @@
-# Plano de Desenvolvimento — InfoFinancas (React + TS + Tailwind + localStorage)
+# Plano de Desenvolvimento — InfoFinancas (ATUALIZADO)
 
-## Objetivo
+## Objetivo (mantido)
 
-Desenvolver uma aplicação Front-end em React para controle financeiro pessoal, praticando:
+Concluir a aplicação de controle financeiro pessoal em React, com foco em:
 
-- Manipulação de estado
-- Filtragem de arrays por data
-- Persistência no navegador com `localStorage`
-
----
-
-## Stack
-
-- React (Vite)
-- TypeScript
-- Tailwind CSS
-- localStorage (sem back-end)
+- estado global organizado
+- filtros por mês
+- persistência em `localStorage`
 
 ---
 
-## Modelo de Dados (único da aplicação)
+## Diagnóstico do estado atual (02/03/2026)
+
+### O que já existe
+
+- `src/App.tsx` com estado e persistência básica
+- `src/components/addTransaction.tsx` com formulário inicial
+- `src/components/reports.tsx` com estrutura de filtro e resumo
+
+### Principais desalinhamentos encontrados
+
+1. **Modelo inconsistente entre arquivos**
+   - `App.tsx` usa `date: Date`
+   - `addTransaction.tsx` envia data formatada `dd-MM-yyyy`
+   - `reports.tsx` espera `category` e parseia `dd-MM-yyyy`
+
+2. **Persistência com chave diferente do plano antigo**
+   - código atual usa `transactions`
+   - padrão desejado: `infofinancas:transactions`
+
+3. **`AddTransaction` incompleto**
+   - ainda sem campo `category`
+   - assinatura de callback fragmentada em vários parâmetros
+   - importa `./App.css` (caminho incorreto para o componente)
+
+4. **`Reports` incompleto**
+   - input de mês ainda está `type="text"`
+   - resumo é calculado, mas não está renderizado
+   - lista e remoção ainda não foram implementadas na UI
+
+5. **Navegação por abas ainda não existe**
+   - falta componente `Header`
+   - falta estado `activeTab`
+
+---
+
+## Padrão único de dados (definitivo)
 
 ```ts
 interface Transaction {
   id: string;
   title: string;
   amount: number;
-  date: string; // formato YYYY-MM-DD
+  date: string; // YYYY-MM-DD
   type: "income" | "outcome";
   category: string;
 }
 ```
 
----
-
-## Arquitetura Geral
-
-### `App.tsx` (estado global + navegação)
-
-Responsabilidades:
-
-1. Manter estado global `transactions: Transaction[]`
-2. Carregar transações do `localStorage` ao iniciar
-3. Salvar no `localStorage` sempre que `transactions` mudar (`useEffect`)
-4. Manter estado de aba `activeTab: 'cadastro' | 'relatorios'`
-5. Expor handlers:
-   - `handleAddTransaction(newTransaction)`
-   - `handleDeleteTransaction(id)`
+> Decisão: o formato salvo será **sempre `YYYY-MM-DD`**. Isso simplifica filtro mensal com `startsWith("YYYY-MM")`.
 
 ---
 
-## Componentes e Requisitos
+## Arquitetura alvo (versão final)
 
-### 1) `Header.tsx`
+### `App.tsx`
 
-Props:
+- estado global `transactions: Transaction[]`
+- estado de aba `activeTab: 'cadastro' | 'relatorios'`
+- `handleAddTransaction(transaction: Transaction)`
+- `handleDeleteTransaction(id: string)`
+- load/save no `localStorage` com chave `infofinancas:transactions`
 
-- `activeTab: 'cadastro' | 'relatorios'`
-- `onChangeTab: (tab) => void`
+### Componentes
 
-Entrega:
-
-- Título do app
-- Botões “Cadastro” e “Relatórios”
-- Aba ativa com destaque visual
-
----
-
-### 2) `AddTransaction.tsx` (Cadastro)
-
-Props:
-
-- `onAddTransaction: (transaction: Transaction) => void`
-
-Campos:
-
-- title
-- amount
-- date (`input type="date"`)
-- type (`income` / `outcome`)
-- category
-
-Validações no submit:
-
-1. `title.trim()` e `category.trim()` não vazios
-2. `amount` convertido para número
-3. `amount` válido (`!NaN`) e `> 0`
-4. `date` preenchida no formato `YYYY-MM-DD`
-
-Fluxo do submit:
-
-1. `preventDefault()`
-2. validar
-3. montar objeto `Transaction`:
-   - `id: crypto.randomUUID()`
-4. enviar para pai via `onAddTransaction`
-5. limpar formulário
+1. `Header.tsx` — troca de abas
+2. `addTransaction.tsx` — cadastro completo
+3. `reports.tsx` — filtro mensal + resumo + lista
+4. `SummaryCard.tsx` — card de total
+5. `TransactionList.tsx` — lista vazia/itens
+6. `TransactionItem.tsx` — item com formatação e exclusão
 
 ---
 
-### 3) `Reports.tsx` (Relatórios)
+## Próximos passos (ordem realista)
 
-Props:
-
-- `transactions: Transaction[]`
-- `onDeleteTransaction: (id: string) => void`
-
-Estado local:
-
-- `selectedMonth: string` no formato `YYYY-MM` (`input type="month"`)
-
-Regras:
-
-1. Filtrar transações:
-   - `transaction.date.startsWith(selectedMonth)`
-2. Calcular resumo com `reduce()`:
-   - total de entradas
-   - total de saídas
-   - saldo final (`income - outcome`)
-3. Renderizar:
-   - 3 `SummaryCard`
-   - `TransactionList` com transações filtradas
+1. **Unificar o tipo `Transaction` em `App.tsx`**
+2. **Ajustar persistência para `infofinancas:transactions`**
+3. **Refatorar `addTransaction.tsx`**
+   - incluir `category`
+   - trocar callback para objeto único `Transaction`
+   - manter `date` como string `YYYY-MM-DD`
+4. **Conectar cadastro no `App.tsx`**
+5. **Criar `Header.tsx` e navegação por abas**
+6. **Completar `reports.tsx`**
+   - `input type="month"`
+   - filtro via `startsWith(selectedMonth)`
+   - render de resumo
+7. **Criar `SummaryCard.tsx`**
+8. **Criar `TransactionList.tsx` e `TransactionItem.tsx`**
+9. **Integrar exclusão no relatório**
+10. **Revisar UX com Tailwind**
 
 ---
 
-### 4) `SummaryCard.tsx`
+## Checklist atualizado
 
-Props:
-
-- `title: string`
-- `value: number`
-- `variant?: 'income' | 'outcome' | 'balance'`
-
-Comportamento:
-
-- Exibir valor em BRL (`Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })`)
-- Cor:
-  - income: verde
-  - outcome: vermelho
-  - balance: verde se >= 0, vermelho se < 0
-
----
-
-### 5) `TransactionList.tsx`
-
-Props:
-
-- `transactions: Transaction[]`
-- `onDeleteTransaction: (id: string) => void`
-
-Comportamento:
-
-- Renderizar lista (ou tabela) de `TransactionItem`
-- Se vazio: mensagem “Nenhuma transação neste período”
-
----
-
-### 6) `TransactionItem.tsx`
-
-Props:
-
-- `transaction: Transaction`
-- `onDelete: (id: string) => void`
-
-Comportamento:
-
-- Exibir:
-  - título
-  - categoria
-  - valor em BRL
-  - data formatada `DD/MM/YYYY` (com `date-fns` ou `Intl`)
-- Botão excluir chama `onDelete(transaction.id)`
-
----
-
-## Persistência (localStorage)
-
-Chave:
-
-- `infofinancas:transactions`
-
-Fluxo:
-
-1. Ao iniciar app:
-   - ler chave
-   - `JSON.parse`
-   - fallback para `[]`
-2. Ao alterar `transactions`:
-   - `localStorage.setItem(chave, JSON.stringify(transactions))`
-
----
-
-## Formatação (padrões)
-
-### Data
-
-- Armazenamento: `YYYY-MM-DD` (interface `Transaction`)
-- Exibição na lista: `DD/MM/YYYY`
-
-### Moeda
-
-- Sempre BRL com `Intl.NumberFormat`
-
----
-
-## Ordem de Implementação (passo a passo)
-
-1. Definir `Transaction` e estado global em `App.tsx`
-2. Implementar `Header.tsx` e troca de abas
-3. Finalizar `AddTransaction.tsx` (validação + submit + reset)
-4. Conectar `AddTransaction` ao `App.tsx`
-5. Criar `Reports.tsx` com filtro por mês
-6. Criar `SummaryCard.tsx`
-7. Criar `TransactionList.tsx`
-8. Criar `TransactionItem.tsx` (formatações + delete)
-9. Integrar delete no `App.tsx`
-10. Revisar UX/estilo com Tailwind
-
----
-
-## Critérios de Conclusão (Checklist)
-
-- [ ] Cadastro cria transação válida com `id` único
-- [ ] Validações de texto/valor/data/categoria funcionando
-- [ ] `localStorage` salva e restaura dados corretamente
-- [ ] Navegação entre abas funcionando
-- [ ] Filtro mensal em `Reports` funcionando
-- [ ] Totais (entrada/saída/saldo) corretos via `reduce`
-- [ ] Lista mostra dados formatados (BRL e DD/MM/YYYY)
-- [ ] Exclusão remove item do estado e da persistência
-- [ ] UI consistente com Tailwind
+- [ ] Tipo `Transaction` único em toda a app
+- [ ] Data padronizada em `YYYY-MM-DD` no armazenamento
+- [ ] `AddTransaction` com validação de título, categoria, valor e data
+- [ ] Persistência com chave `infofinancas:transactions`
+- [ ] Navegação entre abas (`cadastro`/`relatorios`)
+- [ ] Filtro mensal funcional em `Reports`
+- [ ] Resumo (entrada/saída/saldo) renderizado corretamente
+- [ ] Lista com estado vazio e exclusão por item
+- [ ] Formatação BRL e data `DD/MM/YYYY` na exibição
+- [ ] Estilo consistente com Tailwind
