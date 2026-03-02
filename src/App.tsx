@@ -5,7 +5,7 @@ interface Transaction {
   id: string,
   title: string,
   amount: number,
-  date: string,
+  date: Date,
   type: 'income' | 'outcome',
 }
 

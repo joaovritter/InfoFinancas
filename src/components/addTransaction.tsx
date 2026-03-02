@@ -1,14 +1,6 @@
-import { useState } from 'react'
-import './App.css'
-
-/**
- * Componente que gerencia estados locais para armazenar os campos do formulário de transação e a função de envio.
- * Validar os dados antes de enviar
- * Gerar Id unico
- * Chamar a funcao onAddTransactionSubmit para enviar os dados para o componente pai (App.tsx)
- * limpar campos do formulário após o envio
- * no formulário usamos os setters dos states
- */
+import { useState } from 'react';
+import { format } from 'date-fns';
+import './App.css';
 
 interface AddTransactionProps {
     onAddTransactionSubmit: (
@@ -21,57 +13,55 @@ interface AddTransactionProps {
 }
 
 const AddTransaction: React.FC<AddTransactionProps> = ({ onAddTransactionSubmit }) => {
-
     const [title, setTitle] = useState<string>('');
     const [amount, setAmount] = useState<number>(0);
-    const [date, setDate] = useState<string>('');
+    const [date, setDate] = useState<Date | null>(null);
     const [type, setType] = useState<'income' | 'outcome'>('income');
 
     const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault(); //evita que a pagina recarregue ao enviar o formulário
+        e.preventDefault();
 
-        if (!title.trim() || amount <= 0 || !date.trim()) {
+        if (!title.trim() || amount <= 0 || !date) {
             alert('Por favor, preencha todos os campos corretamente.');
             return;
         }
 
         const id = crypto.randomUUID();
+        const formattedDate = format(date, 'dd-MM-yyyy');
 
-        onAddTransactionSubmit(id, title, amount, date, type);
+        onAddTransactionSubmit(id, title, amount, formattedDate, type);
 
         setTitle('');
         setAmount(0);
-        setDate('');
+        setDate(null);
         setType('income');
-
     };
 
     return (
-        <form onSubmit={handleSubmit} className='flex flex-col gap-4 p-4'>
-            <h2 className='text-x1 font-bold'>Adicionar Transação</h2>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
+            <h2 className="text-x1 font-bold">Adicionar Transação</h2>
 
             <input
                 type="text"
                 placeholder="Título"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className='border p-2 rounded'
+                className="border p-2 rounded"
             />
 
             <input
-                type="text"
-                placeholder="Título"
+                type="number"
+                placeholder="Valor"
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                className='border p-2 rounded'
+                className="border p-2 rounded"
             />
 
             <input
-                type="text"
-                placeholder="Título"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className='border p-2 rounded'
+                type="date"
+                value={date ? date.toISOString().split('T')[0] : ''}
+                onChange={(e) => setDate(new Date(e.target.value))}
+                className="border p-2 rounded"
             />
 
             <div className="flex gap-4">
@@ -103,9 +93,8 @@ const AddTransaction: React.FC<AddTransactionProps> = ({ onAddTransactionSubmit 
             >
                 Adicionar
             </button>
-
         </form>
     );
-}
+};
 
-export default AddTransaction
+export default AddTransaction;
