@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { format } from 'date-fns';
-import './App.css';
 
 interface AddTransactionProps {
     onAddTransactionSubmit: (
@@ -15,7 +13,7 @@ interface AddTransactionProps {
 const AddTransaction: React.FC<AddTransactionProps> = ({ onAddTransactionSubmit }) => {
     const [title, setTitle] = useState<string>('');
     const [amount, setAmount] = useState<number>(0);
-    const [date, setDate] = useState<Date | null>(null);
+    const [date, setDate] = useState<string>('');
     const [type, setType] = useState<'income' | 'outcome'>('income');
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -27,13 +25,12 @@ const AddTransaction: React.FC<AddTransactionProps> = ({ onAddTransactionSubmit 
         }
 
         const id = crypto.randomUUID();
-        const formattedDate = format(date, 'dd-MM-yyyy');
 
-        onAddTransactionSubmit(id, title, amount, formattedDate, type);
+        onAddTransactionSubmit(id, title, amount, date, type);
 
         setTitle('');
         setAmount(0);
-        setDate(null);
+        setDate('');
         setType('income');
     };
 
@@ -59,8 +56,8 @@ const AddTransaction: React.FC<AddTransactionProps> = ({ onAddTransactionSubmit 
 
             <input
                 type="date"
-                value={date ? date.toISOString().split('T')[0] : ''}
-                onChange={(e) => setDate(new Date(e.target.value))}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
                 className="border p-2 rounded"
             />
 

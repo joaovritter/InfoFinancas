@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 
 interface Transaction {
   id: string,
   title: string,
   amount: number,
-  date: Date,
+  date: string,
   type: 'income' | 'outcome',
 }
 
@@ -14,6 +14,12 @@ const App = () => {
     JSON.parse(localStorage.getItem('transactions') || '[]') //pega as transações do localStorage ou inicia com um array vazio
   );
 
+  //estado de aba
+  const [activeTab, setActiveTab] = useState<'cadastro' | 'relatorios'>('cadastro');
+
+  useEffect(() => {
+    localStorage.setItem('transactions', JSON.stringify(transaction)); //salva as transações no localStorage
+  }, [transaction]);
 
   return (
     <>

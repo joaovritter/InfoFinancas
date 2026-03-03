@@ -54,7 +54,6 @@ interface Transaction {
   amount: number;
   date: string; // YYYY-MM-DD
   type: "income" | "outcome";
-  category: string;
 }
 ```
 
@@ -88,7 +87,6 @@ interface Transaction {
 1. **Unificar o tipo `Transaction` em `App.tsx`**
 2. **Ajustar persistência para `infofinancas:transactions`**
 3. **Refatorar `addTransaction.tsx`**
-   - incluir `category`
    - trocar callback para objeto único `Transaction`
    - manter `date` como string `YYYY-MM-DD`
 4. **Conectar cadastro no `App.tsx`**
@@ -108,7 +106,7 @@ interface Transaction {
 
 - [ ] Tipo `Transaction` único em toda a app
 - [ ] Data padronizada em `YYYY-MM-DD` no armazenamento
-- [ ] `AddTransaction` com validação de título, categoria, valor e data
+- [ ] `AddTransaction` com validação de título, valor e data
 - [ ] Persistência com chave `infofinancas:transactions`
 - [ ] Navegação entre abas (`cadastro`/`relatorios`)
 - [ ] Filtro mensal funcional em `Reports`
